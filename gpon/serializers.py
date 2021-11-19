@@ -1,10 +1,23 @@
 from rest_framework import serializers
+from django.contrib.auth.models import User
 from gpon.models import *
 
-class AtsSerializer(serializers.Serializer):
-    id = serializers.IntegerField(read_only=True)
-    name = serializers.CharField(max_length=100)
-    address = serializers.CharField(required=False, allow_blank=True, max_length=100)
-    author = serializers.CharField()
+class AtsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ats
+        fields = '__all__'
 
-    
+class OltSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Olt
+        fields = '__all__'
+
+class OntSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ont
+        fields = '__all__'
+
+class RssiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Rssi
+        fields = '__all__'

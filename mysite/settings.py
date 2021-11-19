@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'gpon.apps.GponConfig',
+    'gpon',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -78,10 +78,12 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'OPTIONS': {
-            'read_default_file': 'C:/Users/Chinya/my.cnf',
-        },
+        'ENGINE': 'django.db.backends.mysql', 
+        'NAME': 'gpon',
+        'USER': 'django',
+        'PASSWORD': 'CoD46810qweasd2@',
+        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'PORT': '3306',
     }
 }
 
