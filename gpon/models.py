@@ -19,7 +19,7 @@ class Olt(models.Model):
     )
     model = models.CharField(max_length=50)
     version = models.CharField(max_length=50)
-    ats = models.ForeignKey(Ats, on_delete=models.CASCADE)
+    ats = models.ForeignKey(Ats,related_name='olts', on_delete=models.CASCADE)
 
 class Ont(models.Model):
     created = models.DateTimeField(auto_now_add=True)
@@ -34,10 +34,10 @@ class Ont(models.Model):
     profile = models.CharField(max_length=50)
     login = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
-    olt = models.ForeignKey(Olt,on_delete=models.CASCADE)
+    olt = models.ForeignKey(Olt,related_name='onts',on_delete=models.CASCADE)
 
 class Rssi(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     rx = models.FloatField(blank=True,null=True)
     tx = models.FloatField(blank=True,null=True)
-    ont = models.ForeignKey(Ont,on_delete=models.CASCADE)
+    ont = models.ForeignKey(Ont,related_name='rssi',on_delete=models.CASCADE)

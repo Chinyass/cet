@@ -1,84 +1,70 @@
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from django.http import Http404
+
+from rest_framework import generics
 
 from gpon.models import *
 from gpon.serializers import *
 
-@csrf_exempt
-def ats_list(request):
-    print('USER',type(request.user))
-    if request.method == 'GET':
+class AtsList(APIView):
+    def get(self, request, format=None):
         ats = Ats.objects.all()
         serializer = AtsSerializer(ats,many=True)
-        return JsonResponse(serializer.data,safe=False)
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = AtsSerializer(data=data)
+        return Response(serializer.data)
+    def post(self, request, format=None):
+        serializer = AtsSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data,status=201)
-        return JsonResponse(serializer.errors,status=400)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@csrf_exempt
-def ats_detail(request,pk):
-    print(pk)
-    try:
-        ats = Ats.objects.get(pk=pk)
-    except Snipet.DoesNotExists:
-        return HttpResponse(status=404)
+class AtsDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return Ats.objects.get(pk=pk)
+        except Ats.DoesNotExists:
+            raise Http404
     
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        ats = self.get_object(pk)
         serializer = AtsSerializer(ats)
-        return JsonResponse(serializer.data)
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = AtsSerializer(ats,data=data)
+        return Response(serializer.data)
+    def put(self, request, pk, format=None):
+        ats = self.get_object(pk)
+        serializer = AtsSerializer(ats,data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
+            return Response(serializer.data)
         
-        return JsonResponse(serializer.errors,status=400)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    def put(self, request, pk, format=None):
+        ats = self.get_object(pk)
         ats.delete()
-        return HttpResponse(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-@csrf_exempt
-def olt_list(request):
-    if request.method == 'GET':
-        olt = Olt.objects.all()
-        serializer = OltSerializer(olt,many=True)
-        return JsonResponse(serializer.data,safe=False)
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = OltSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data,status=201)
-        return JsonResponse(serializer.errors,status=400)
+class OltList(generics.ListCreateAPIView):
+    queryset = Olt.objects.all()
+    serializer_class = OltSerializer
 
-@csrf_exempt
-def olt_detail(request,pk):
-    print(pk)
-    try:
-        olt = Olt.objects.get(pk=pk)
-    except Snipet.DoesNotExists:
-        return HttpResponse(status=404)
-    
-    if request.method == 'GET':
-        serializer = OltSerializer(olt)
-        return JsonResponse(serializer.data)
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = OltSerializer(olt,data=data)
-        if serializer.is_valid():
-            serializer.save()
-            return JsonResponse(serializer.data)
-        
-        return JsonResponse(serializer.errors,status=400)
+class OltDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Olt.objects.all()
+    serializer_class = OltSerializer
 
-    elif request.method == 'DELETE':
-        olt.delete()
-        return HttpResponse(status=204)
+class OntList(generics.ListCreateAPIView):
+    queryset = Ont.objects.all()
+    serializer_class = OntSerializer
+
+class OntDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Ont.objects.all()
+    serializer_class = OntSerializer
+
+class RssiList(generics.ListCreateAPIView):
+    queryset = Rssi.objects.all()
+    serializer_class = RssiSerializer
+
+class RssiDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Rssi.objects.all()
+    serializer_class = RssiSerializer
