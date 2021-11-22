@@ -1,0 +1,148 @@
+import pysnmp.hlapi as pysnmp
+from pysnmp.proto import rfc1902
+from easysnmp import Session
+from typing import Tuple
+import time
+
+class Snmp:
+    def __init__(self,ip,community):
+        self.session = Session(hostname=ip,community=community,version=2)
+    
+    def walk(self,oid):
+        return list(
+            map(
+                lambda x: x.value,self.session.walk(oid)
+            )
+        )
+    
+    def walk_index(self,oid):
+        return list(
+            map(
+                lambda x: x.oid.split('.')[-1],self.session.walk(oid)
+            )
+        )
+    
+    def walk_index_value(self,oid):
+        return list(
+            map(
+                lambda x: (x.oid.split('.')[-1],x.value),self.session.walk(oid)
+            )
+        )
+    
+    def walk_serial_value(self,oid):
+        return list(
+            map(
+                lambda x: (x.oid.split('.')[-8:],x.value),self.session.walk(oid)
+            )
+        )
+    
+    def get(self,oid):
+        return self.session.get(oid).value
+    
+    def set(self,oid,value,snmptype):
+        iterator = next(
+            pysnmp.setCmd(
+                pysnmp.SnmpEngine(),
+                pysnmp.CommunityData(self.session.community),
+                pysnmp.UdpTransportTarget( (self.session.hostname,'161') ),
+                pysnmp.ContextData(),
+                pysnmp.ObjectType(pysnmp.ObjectIdentity(oid),snmptype(value))
+            )
+        )
+        errorIndication, errorStatus, errorIndex, vals = iterator
+        if errorIndication or errorStatus:
+            return False
+        else:
+            return True
+    
+    def convert_to_hex(self,bytes):
+        s = ""
+        for i in bytes:
+            s += ("%0.2X" % ord(i))
+        return s
+
+
+    
+    def get_inform_acs_user(self,search_personal):
+        all_serial_and_user = self.walk_serial_value('1.3.6.1.4.1.35265.1.22.3.15.1.2.8')
+        finded_user_dec_serial: Tuple[list,str] = list(filter(lambda x: x[1] == search_personal ,all_serial_and_user))
+        if finded_user_dec_serial:
+            finded_user_dec_serial = '.'.join( finded_user_dec_serial[0][0] )
+        else:
+            return False
+        
+        SERIAL = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.2.1.8.{finded_user_dec_serial}')
+        if SERIAL == 'NOSUCHINSTANCE':
+            SERIAL = 'OFFLINE'
+        else:
+            SERIAL = self.convert_to_hex(SERIAL)
+
+        STATUS = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.5.1.8.{finded_user_dec_serial}')
+        if STATUS == 'NOSUCHINSTANCE':
+            STATUS = 'OFFLINE'
+        elif STATUS == '7':
+            STATUS = 'ACTIVE'
+        elif STATUS == '13':
+            STATUS = 'UNACTIVATE'
+        else:
+            STATUS = 'UNKNOWN'
+        
+        PORT = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.3.1.8.{finded_user_dec_serial}')
+        if PORT == 'NOSUCHINSTANCE':
+            PORT = 'OFFLINE'
+        ID = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.4.1.8.{finded_user_dec_serial}')
+        if ID == 'NOSUCHINSTANCE':
+            ID = 'OFFLINE'
+        MODEL = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.12.1.8.{finded_user_dec_serial}')
+        if MODEL == 'NOSUCHINSTANCE':
+            MODEL = 'OFFLINE'
+        VERSION = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.17.1.8.{finded_user_dec_serial}')
+        if VERSION == 'NOSUCHINSTANCE':
+            VERSION = 'OFFLINE'
+        RX = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.11.1.8.{finded_user_dec_serial}')
+        if RX == 'NOSUCHINSTANCE':
+            RX = 'OFFLINE'
+        TX = self.get(f'1.3.6.1.4.1.35265.1.22.3.1.1.14.1.8.{finded_user_dec_serial}')
+        if TX == 'NOSUCHINSTANCE':
+            TX = 'OFFLINE'
+
+        USER = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.2.8.{finded_user_dec_serial}')
+        USER = 'NOT CREATED' if USER == 'No Such Object currently exists at this OID' else USER
+        LOGIN = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.11.8.{finded_user_dec_serial}')
+        LOGIN = 'NOT CREATED' if LOGIN == 'No Such Object currently exists at this OID' else LOGIN
+        PASSWORD = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.12.8.{finded_user_dec_serial}')
+        PASSWORD = 'NOT CREATED' if PASSWORD == 'No Such Object currently exists at this OID' else PASSWORD
+        PROFILE = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.3.8.{finded_user_dec_serial}')
+        PROFILE = 'NOT CREATED' if PROFILE == 'No Such Object currently exists at this OID' else PROFILE
+
+        TEMPLATE_ID = self.get(f'.1.3.6.1.4.1.35265.1.22.3.4.1.43.1.8.{finded_user_dec_serial}')
+        TEMPLATE = self.get(f'.1.3.6.1.4.1.35265.1.22.3.24.1.1.2.{TEMPLATE_ID}')
+
+        VOIP_ENABLE = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.4.8.{finded_user_dec_serial}')
+        VOIP_NUMBER = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.5.8.{finded_user_dec_serial}')
+        VOIP_PASSWORD = self.get(f'1.3.6.1.4.1.35265.1.22.3.15.1.6.8.{finded_user_dec_serial}')
+
+        return {
+            'SERIAL': SERIAL,
+            'STATUS': STATUS,
+            'PORT': PORT,
+            'ID':ID,
+            'MODEL':MODEL,
+            'VERSION':VERSION,
+            'RX':RX,
+            'TX':TX,
+            'USER':USER,
+            'LOGIN':LOGIN,
+            'PASSWORD':PASSWORD,
+            'PROFILE':PROFILE,
+            'TEMPLATE':TEMPLATE,
+            'VOIP_ENABLE':VOIP_ENABLE,
+            'VOIP_NUMBER':VOIP_NUMBER,
+            'VOIP_PASSWORD':VOIP_PASSWORD
+        }
+
+if __name__ == '__main__':
+    start = time.time()
+    snmp = Snmp('10.3.0.26','private_otu')
+    print(snmp.get_inform_acs_user('olks_gpon'))
+    print('Time:',time.time()-start)

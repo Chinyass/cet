@@ -10,4 +10,5 @@ urlpatterns = [
     path('ont', views.OntList.as_view()),
     path('rssi/<int:pk>', views.RssiDetail.as_view()),
     path('rssi', views.RssiList.as_view()),
+    path('find_personal',views.find_personal)
 ]

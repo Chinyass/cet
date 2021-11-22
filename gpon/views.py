@@ -2,11 +2,42 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import Http404
-
+from rest_framework.decorators import api_view
 from rest_framework import generics
-
+from django.contrib.auth.models import User
 from gpon.models import *
 from gpon.serializers import *
+
+from .Snmp import Snmp
+
+@api_view(['POST'])
+def find_personal(request):
+    if request.method == 'POST':
+        received_json_data = request.data
+        ips = received_json_data['ips']
+        personal = received_json_data['personal']
+        inform = {}
+        for ip in ips:
+            sw = Snmp(ip,'private_otu')
+            inform = sw.get_inform_acs_user(personal)
+            if inform:
+                author = User.objects.get(pk=1)
+                operation = Operation(author=author, type_operation='find_user',status='success')
+                operation.save()
+                serializer = OperationSerializer(operation)
+
+                Response(serializer.data,status.HTTP_200_OK)
+                print('asdasdas')
+        if not inform:
+            author = User.objects.get(pk=1)
+            operation = Operation(author=author, type_operation='find_user',status='fail')
+            operation.save()
+            return Response({'error':'true','message':'ont не найдено' }, status=500)
+
+        return Response(inform)
+    else:
+        return Response({},status=status.HTTP_400_BAD_REQUEST)
+
 
 class AtsList(APIView):
     def get(self, request, format=None):

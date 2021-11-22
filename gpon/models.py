@@ -34,10 +34,21 @@ class Ont(models.Model):
     profile = models.CharField(max_length=50)
     login = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
-    olt = models.ForeignKey(Olt,related_name='onts',on_delete=models.CASCADE)
+    olt = models.ForeignKey(Olt,related_name='onts',on_delete=models.CASCADE,blank=True,null=True)
 
 class Rssi(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     rx = models.FloatField(blank=True,null=True)
     tx = models.FloatField(blank=True,null=True)
     ont = models.ForeignKey(Ont,related_name='rssi',on_delete=models.CASCADE)
+
+class Operation(models.Model):
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+    )
+    type_operation = models.CharField(max_length=100)
+    created = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=100)
+    reason = models.CharField(max_length=200)
+    ont = models.ForeignKey(Ont, related_name='operation',on_delete=models.CASCADE,null=True, blank=True)

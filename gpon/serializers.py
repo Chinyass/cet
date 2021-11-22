@@ -8,7 +8,7 @@ class AtsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class OltSerializer(serializers.ModelSerializer):
-    onts = serializers.PrimaryKeyRelatedField(many=True, queryset=Ont.objects.all())
+    onts = serializers.PrimaryKeyRelatedField(many=True, queryset=Ont.objects.all(),required=False, allow_null=True)
     class Meta:
         model = Olt
         fields = '__all__'
@@ -22,4 +22,9 @@ class OntSerializer(serializers.ModelSerializer):
 class RssiSerializer(serializers.ModelSerializer):
     class Meta:
         model = Rssi
+        fields = '__all__'
+
+class OperationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Operation
         fields = '__all__'
