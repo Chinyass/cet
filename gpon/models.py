@@ -27,13 +27,19 @@ class Ont(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    serial = models.CharField(max_length=50)
+    serial = models.CharField(max_length=50,unique=True)
+    pid = models.CharField(max_length=50)
+    port = models.CharField(max_length=50)
     version = models.CharField(max_length=50)
     model = models.CharField(max_length=50)
     template = models.CharField(max_length=50)
     profile = models.CharField(max_length=50)
+    personal = models.CharField(max_length=50)
     login = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
+    voip_enable = models.CharField(max_length=50,null=True,blank=True)
+    voip_number = models.CharField(max_length=50,blank=True,null=True)
+    voip_password = models.CharField(max_length=50,blank=True,null=True)
     olt = models.ForeignKey(Olt,related_name='onts',on_delete=models.CASCADE,blank=True,null=True)
 
 class Rssi(models.Model):
@@ -42,13 +48,12 @@ class Rssi(models.Model):
     tx = models.FloatField(blank=True,null=True)
     ont = models.ForeignKey(Ont,related_name='rssi',on_delete=models.CASCADE)
 
-class Operation(models.Model):
+class OperationFindPersonal(models.Model):
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
     )
-    type_operation = models.CharField(max_length=100)
     created = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=100)
-    reason = models.CharField(max_length=200)
+    status = models.BooleanField()
+    personal = models.CharField(max_length=50)
     ont = models.ForeignKey(Ont, related_name='operation',on_delete=models.CASCADE,null=True, blank=True)

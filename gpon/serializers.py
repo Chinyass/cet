@@ -24,7 +24,7 @@ class RssiSerializer(serializers.ModelSerializer):
         model = Rssi
         fields = '__all__'
 
-class OperationSerializer(serializers.ModelSerializer):
+class OperationFindPersonalSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Operation
+        model = OperationFindPersonal
         fields = '__all__'

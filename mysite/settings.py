@@ -108,7 +108,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'mysite.exceptions.core_exception_handler',
+    'NON_FIELD_ERRORS_KEY': 'error',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'authentication.backends.JWTAuthentication',
+    ),
+}
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
