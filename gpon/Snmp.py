@@ -1,12 +1,8 @@
 import pysnmp.hlapi as pysnmp
 from pysnmp.proto import rfc1902
-#from easysnmp import Session
+from easysnmp import Session
 from typing import Tuple
 import time
-
-class Session:
-    def __init__(hostname,community,version) -> None:
-        pass
     
 class Snmp:
     def __init__(self,ip,community):
@@ -59,6 +55,12 @@ class Snmp:
         else:
             return True
     
+    def get_rx_traffic_ont(self,dec_serial):
+        return self.get(f'1.3.6.1.4.1.35265.1.22.3.3.10.1.6.1.8.{dec_serial}.1.1')
+    
+    def get_tx_traffic_ont(self,dec_serial):
+        return self.get(f'1.3.6.1.4.1.35265.1.22.3.3.11.1.6.1.8.{dec_serial}.1.1')
+
     def convert_to_hex(self,bytes):
         s = ""
         for i in bytes:
@@ -160,9 +162,31 @@ class Snmp:
         hexserial = hexserial.replace('ELTX','454C5458')
         dec_serial = self.convert_hex_to_dec(hexserial)
         return self.get_inform_from_dec_serial(dec_serial)
+    
+    def get_traffic_ont(self,hexserial):
+        hexserial = hexserial.replace('ELTX','454C5458')
+        dec_serial = self.convert_hex_to_dec(hexserial)
+        old_rx = self.get_rx_traffic_ont(dec_serial)
+        old_tx = self.get_tx_traffic_ont(dec_serial)
+        start = int( time.time() )
+        print(start)
+        print('rx',old_rx)
+        print('tx',old_tx)
+        time.sleep(15)
+        new_rx = self.get_rx_traffic_ont(dec_serial)
+        new_tx = self.get_tx_traffic_ont(dec_serial)
+        end = int ( time.time() )
+        print(end)
+        print('rx',new_rx)
+        print('tx',new_tx)
+        rx = int( ( int(new_rx) - int(old_rx) ) / ( end - start ) ) * 8
+        tx = int( ( int(new_tx) - int(old_tx) ) / ( end - start ) ) * 8
+
+        return (rx,tx)
+
 
 if __name__ == '__main__':
     start = time.time()
     snmp = Snmp('10.3.0.26','private_otu')
-    print(snmp.get_inform_acs_user('olks_gpon'))
+    print(snmp.get_traffic_ont('ELTX69016954'))
     print('Time:',time.time()-start)
